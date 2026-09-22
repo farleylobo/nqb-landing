@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Analisar minha rede — Atria</title>
+  <meta name="description" content="Preencha os dados e a gente te retorna com um plano de ação para a sua rede.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+<div class="flex min-h-screen flex-col bg-paper font-sans text-ink antialiased selection:bg-teal/20">
+  <header class="sticky top-0 z-40 border-b border-line/60 bg-surface/80 backdrop-blur-xl">
+    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
+      <a href="/" aria-label="Atria, início"><img src="/assets/atria-logo.webp" alt="Atria" class="h-9 w-auto" width="360" height="113"></a>
+      <a href="/" class="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><svg class="lucide lucide-arrow-left size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg> Voltar ao site</a>
+    </div>
+  </header>
+
+  <main class="relative flex-1 overflow-hidden">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_15%,color-mix(in_oklab,var(--teal)_13%,transparent),transparent_30%),radial-gradient(circle_at_88%_40%,color-mix(in_oklab,var(--sky)_12%,transparent),transparent_28%)]"></div>
+    <div class="relative mx-auto max-w-2xl px-5 py-14 lg:py-20">
+      <div class="atria-fade relative overflow-hidden rounded-lg border border-line/60 bg-card/70 p-6 shadow-lg shadow-ink/5 backdrop-blur-2xl sm:p-10">
+        <div class="absolute -right-12 -top-20 size-72 rounded-full bg-teal/10 blur-3xl"></div>
+        <div class="relative">
+          <h1 class="font-display text-4xl font-medium leading-tight sm:text-5xl">Analisar minha rede</h1>
+          <p class="mt-4 leading-relaxed text-muted-foreground">Preencha os dados abaixo e a gente te retorna com um plano de ação.</p>
+
+          <form id="analisar-form" name="analisar-rede" method="POST" action="/analisar/obrigado/" data-netlify="true" netlify-honeypot="bot-field" class="mt-8 grid gap-5" novalidate>
+            <input type="hidden" name="form-name" value="analisar-rede">
+            <p class="hidden"><label>Não preencha este campo: <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
+
+            <div class="grid gap-2">
+              <label for="nome" class="text-sm font-semibold">Nome <span class="text-teal" aria-hidden="true">*</span></label>
+              <input id="nome" name="nome" type="text" required autocomplete="name" class="min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
+              <p class="hidden text-sm text-destructive" data-error-for="nome">Informe seu nome.</p>
+            </div>
+
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div class="grid content-start gap-2">
+                <label for="email" class="text-sm font-semibold">E-mail <span class="text-teal" aria-hidden="true">*</span></label>
+                <input id="email" name="email" type="email" required autocomplete="email" inputmode="email" class="min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
+                <p class="hidden text-sm text-destructive" data-error-for="email">Informe um e-mail válido, como nome@empresa.com.</p>
+              </div>
+              <div class="grid content-start gap-2">
+                <label for="telefone" class="text-sm font-semibold">Telefone <span class="text-teal" aria-hidden="true">*</span></label>
+                <input id="telefone" name="telefone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="(11) 99999-9999" pattern="[0-9()+\-\s]{8,20}" class="min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition placeholder:text-muted-foreground/60 focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
+                <p class="hidden text-sm text-destructive" data-error-for="telefone">Informe um telefone com DDD.</p>
+              </div>
+            </div>
+
+            <div class="grid gap-2">
+              <label for="linkedin" class="text-sm font-semibold">LinkedIn <span class="text-teal" aria-hidden="true">*</span></label>
+              <input id="linkedin" name="linkedin" type="text" required autocomplete="url" inputmode="url" placeholder="linkedin.com/in/seu-perfil" class="min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition placeholder:text-muted-foreground/60 focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
+              <p class="hidden text-sm text-destructive" data-error-for="linkedin">Informe o link do seu perfil, como linkedin.com/in/seu-perfil.</p>
+            </div>
+
+            <div class="grid gap-2">
+              <label for="objetivo" class="text-sm font-semibold">Qual é seu objetivo? <span class="text-teal" aria-hidden="true">*</span></label>
+              <select id="objetivo" name="objetivo" required class="min-h-11 w-full appearance-none rounded-md border border-line bg-surface/80 bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22/%3E%3C/svg%3E')] bg-[position:right_0.875rem_center] bg-no-repeat px-3.5 pr-10 text-base outline-hidden transition focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
+                <option value="" disabled selected>Selecione uma opção</option>
+                <option>Gerar leads para nova oferta</option>
+                <option>Encontrar parceiros ou especialistas</option>
+                <option>Mobilizar rede para projeto específico</option>
+                <option>Expandir para novo mercado</option>
+                <option>Validar demanda para produto/serviço</option>
+                <option>Levantar recursos ou investimento</option>
+                <option>Outro</option>
+              </select>
+              <p class="hidden text-sm text-destructive" data-error-for="objetivo">Selecione um objetivo.</p>
+            </div>
+
+            <div class="grid gap-2">
+              <label for="tamanho_rede" class="text-sm font-semibold">Tamanho aproximado da sua rede</label>
+              <select id="tamanho_rede" name="tamanho_rede" class="min-h-11 w-full appearance-none rounded-md border border-line bg-surface/80 bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22/%3E%3C/svg%3E')] bg-[position:right_0.875rem_center] bg-no-repeat px-3.5 pr-10 text-base outline-hidden transition focus:border-teal focus:ring-3 focus:ring-ring/25">
+                <option value="" selected>Selecione (opcional)</option>
+                <option>Até 500</option>
+                <option>500 - 3.000</option>
+                <option>3.000 - 5.000</option>
+                <option>5.000 - 10.000</option>
+                <option>Mais de 10.000</option>
+              </select>
+            </div>
+
+            <div class="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <button type="submit" class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold transition duration-200 focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/40 bg-primary text-primary-foreground shadow-sm hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-60">
+                <span data-label>Enviar</span> <svg class="lucide lucide-arrow-right size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+              </button>
+              <p class="text-sm text-muted-foreground"><span class="text-teal">*</span> Campos obrigatórios</p>
+            </div>
+            <p id="form-status" class="hidden rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive" role="alert"></p>
+          </form>
+
+          <div class="mt-8 flex items-center gap-3 border-t border-line/60 pt-6 text-sm text-muted-foreground"><svg class="lucide lucide-check size-4 shrink-0 text-teal" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg> Seus dados permanecem sob seu controle</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-line/60 bg-paper">
+    <div class="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 px-5 py-8 sm:flex-row sm:items-center lg:px-8">
+      <img src="/assets/atria-logo.webp" alt="Atria" class="h-9 w-auto" width="360" height="113">
+      <div class="text-sm text-muted-foreground">
+        <p>Conexões com propósito</p>
+        <p class="mt-1">© 2026 Atria. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var form = document.getElementById('analisar-form');
+  var status = document.getElementById('form-status');
+  var button = form.querySelector('button[type="submit"]');
+  var label = button.querySelector('[data-label]');
+
+  function validLinkedin(v) { return /linkedin\.com\//i.test(v.trim()); }
+  function digits(v) { return (v.match(/\d/g) || []).length; }
+
+  function check(field) {
+    var ok = field.checkValidity();
+    if (ok && field.name === 'linkedin') ok = validLinkedin(field.value);
+    if (ok && field.name === 'telefone') ok = digits(field.value) >= 10;
+    if (ok && field.name === 'nome') ok = field.value.trim().length > 1;
+    field.setAttribute('aria-invalid', ok ? 'false' : 'true');
+    var msg = form.querySelector('[data-error-for="' + field.name + '"]');
+    if (msg) msg.classList.toggle('hidden', ok);
+    return ok;
+  }
+
+  var fields = ['nome', 'email', 'telefone', 'linkedin', 'objetivo'].map(function (n) { return form.elements[n]; });
+  fields.forEach(function (f) {
+    f.addEventListener('blur', function () { if (f.value) check(f); });
+    f.addEventListener('change', function () { if (f.getAttribute('aria-invalid') === 'true') check(f); });
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    status.classList.add('hidden');
+    var firstBad = null;
+    fields.forEach(function (f) { if (!check(f) && !firstBad) firstBad = f; });
+    if (firstBad) { firstBad.focus(); return; }
+
+    button.disabled = true;
+    label.textContent = 'Enviando…';
+    var body = new URLSearchParams(new FormData(form)).toString();
+    fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        window.location.href = '/analisar/obrigado/';
+      })
+      .catch(function () {
+        status.textContent = 'Não foi possível enviar agora. Verifique sua conexão e tente de novo, ou escreva para contato@atria.network.';
+        status.classList.remove('hidden');
+        button.disabled = false;
+        label.textContent = 'Enviar';
+      });
+  });
+})();
+</script>
+</body>
+</html>

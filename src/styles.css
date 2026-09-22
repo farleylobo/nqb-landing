@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/* Tokens copiados do site original (Lovable). Não altere sem querer mudar o visual. */
+:root {
+  --radius: 0.5rem;
+  --background: oklch(95% 0.008 260);
+  --foreground: oklch(20% 0.012 275);
+  --card: oklch(98.5% 0.004 260);
+  --card-foreground: oklch(20% 0.012 275);
+  --primary: oklch(58% 0.105 177);
+  --primary-foreground: oklch(99% 0 0);
+  --muted: oklch(92.5% 0.008 260);
+  --muted-foreground: oklch(50% 0.02 260);
+  --destructive: oklch(57.7% 0.245 27.325);
+  --border: oklch(82% 0.018 260);
+  --input: oklch(82% 0.018 260);
+  --ring: oklch(58% 0.105 177);
+  --paper: oklch(95% 0.008 260);
+  --surface: oklch(98% 0.005 260);
+  --ink: oklch(20% 0.012 275);
+  --line: oklch(82% 0.018 260);
+  --teal: oklch(58% 0.105 177);
+  --sky: oklch(58% 0.13 240);
+}
+
+@theme inline {
+  --font-sans: "Manrope", system-ui, sans-serif;
+  --font-display: Fraunces, Georgia, serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-line: var(--line);
+  --color-teal: var(--teal);
+  --color-sky: var(--sky);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    letter-spacing: 0;
+    margin: 0;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@keyframes atria-fade {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@utility atria-fade {
+  animation: atria-fade 0.8s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .atria-fade { animation: none; }
+}

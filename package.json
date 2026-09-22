@@ -1,53 +1,14 @@
 {
-  "name": "nqb-network-platform",
-  "version": "0.1.0",
+  "name": "atria-landing",
+  "version": "1.0.0",
   "private": true,
+  "description": "Atria: landing page e formulário 'Analisar minha rede'",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.125.0",
-    "@netlify/database": "^2.0.1",
-    "d3-drag": "^3.0.0",
-    "d3-force": "^3.0.0",
-    "d3-hierarchy": "^3.1.2",
-    "d3-scale": "^4.0.2",
-    "d3-scale-chromatic": "^3.1.0",
-    "d3-selection": "^3.0.0",
-    "d3-zoom": "^3.0.0",
-    "next": "16.3.4",
-    "pg": "^8.23.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "react-force-graph-3d": "^1.29.1",
-    "three": "^0.186.0",
-    "xlsx": "^0.18.5",
-    "zod": "^4.6.2"
+    "build": "tailwindcss -i src/styles.css -o public/assets/styles.css --minify",
+    "dev": "tailwindcss -i src/styles.css -o public/assets/styles.css --watch"
   },
   "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.15.13",
-    "@tailwindcss/postcss": "^4",
-    "@types/d3-force": "^3.0.10",
-    "@types/d3-selection": "^3.0.11",
-    "@types/d3-zoom": "^3.0.8",
-    "@types/node": "^20",
-    "@types/pg": "^8.23.1",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@vitest/ui": "^5.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.4",
-    "tailwindcss": "^4",
-    "tsx": "^4.23.13",
-    "typescript": "^5",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.0"
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
   }
 }

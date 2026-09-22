@@ -1,0 +1,4 @@
+node_modules/
+.netlify/
+public/assets/styles.css
+.DS_Store
