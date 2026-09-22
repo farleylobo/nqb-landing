@@ -24,6 +24,7 @@ export const handler = async (event) => {
     email: d.email || '',
     telefone: d.telefone || '',
     linkedin: d.linkedin || '',
+    site: d.site || '',
     objetivo: d.objetivo || '',
     tamanho_rede: d.tamanho_rede || '',
     id_netlify: payload.id || '',

@@ -53,10 +53,17 @@
               </div>
             </div>
 
-            <div class="grid gap-2">
-              <label for="linkedin" class="text-sm font-semibold">LinkedIn <span class="text-teal" aria-hidden="true">*</span></label>
-              <input id="linkedin" name="linkedin" type="text" required autocomplete="url" inputmode="url" placeholder="linkedin.com/in/seu-perfil" class="min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition placeholder:text-muted-foreground/60 focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
-              <p class="hidden text-sm text-destructive" data-error-for="linkedin">Informe o link do seu perfil, como linkedin.com/in/seu-perfil.</p>
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div class="grid content-start gap-2">
+                <label for="linkedin" class="text-sm font-semibold">LinkedIn <span class="font-normal text-muted-foreground">(opcional)</span></label>
+                <input id="linkedin" name="linkedin" type="text" autocomplete="url" inputmode="url" placeholder="linkedin.com/in/seu-perfil" class="min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition placeholder:text-muted-foreground/60 focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
+                <p class="hidden text-sm text-destructive" data-error-for="linkedin">Use o link do perfil, como linkedin.com/in/seu-perfil.</p>
+              </div>
+              <div class="grid content-start gap-2">
+                <label for="site" class="text-sm font-semibold">Site ou portfólio <span class="font-normal text-muted-foreground">(opcional)</span></label>
+                <input id="site" name="site" type="text" autocomplete="url" inputmode="url" placeholder="suaempresa.com.br" class="min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition placeholder:text-muted-foreground/60 focus:border-teal focus:ring-3 focus:ring-ring/25">
+                <p class="text-xs text-muted-foreground">Site pessoal, portfólio ou página da empresa.</p>
+              </div>
             </div>
 
             <div class="grid gap-2">
@@ -75,7 +82,7 @@
             </div>
 
             <div class="grid gap-2">
-              <label for="tamanho_rede" class="text-sm font-semibold">Tamanho aproximado da sua rede</label>
+              <label for="tamanho_rede" class="text-sm font-semibold">Tamanho aproximado da sua rede <span class="font-normal text-muted-foreground">(opcional)</span></label>
               <select id="tamanho_rede" name="tamanho_rede" class="min-h-11 w-full appearance-none rounded-md border border-line bg-surface/80 bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22/%3E%3C/svg%3E')] bg-[position:right_0.875rem_center] bg-no-repeat px-3.5 pr-10 text-base outline-hidden transition focus:border-teal focus:ring-3 focus:ring-ring/25">
                 <option value="" selected>Selecione (opcional)</option>
                 <option>Até 500</option>
@@ -123,7 +130,7 @@
 
   function check(field) {
     var ok = field.checkValidity();
-    if (ok && field.name === 'linkedin') ok = validLinkedin(field.value);
+    if (ok && field.name === 'linkedin') ok = !field.value.trim() || validLinkedin(field.value);
     if (ok && field.name === 'telefone') ok = digits(field.value) >= 10;
     if (ok && field.name === 'nome') ok = field.value.trim().length > 1;
     field.setAttribute('aria-invalid', ok ? 'false' : 'true');
