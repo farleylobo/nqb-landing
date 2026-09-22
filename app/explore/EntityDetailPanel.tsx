@@ -1,0 +1,550 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { computeDataQuality, DATA_QUALITY_LABELS, type DataQuality } from "@/lib/dataQuality";
+import {
+  FUNCTION_LABELS,
+  ORG_TYPE_LABELS,
+  scoreColor,
+  SECTOR_LABELS,
+  SENIORITY_LABELS,
+  SOURCE_LABELS,
+  THEME_COLORS,
+  THEME_LABELS,
+} from "@/lib/enrichment/labels";
+import { statusLabel } from "@/lib/actionItems";
+import { OBJECTIVE_FEEDBACK_OPTIONS, TRIAGE_OPTIONS, type ObjectiveFeedback } from "@/lib/enrichment/types";
+import type { ViewId } from "@/lib/enrichment/views";
+import type { ActionItem, Entity, GraphLink, ScoreBreakdown } from "@/lib/types";
+
+const TYPE_LABELS: Record<Entity["type"], string> = {
+  person: "Pessoa",
+  organization: "Organização",
+  framework: "Framework",
+  network: "Rede",
+};
+
+const QUALITY_BADGE_CLASS: Record<DataQuality, string> = {
+  complete: "bg-emerald-50 text-emerald-700 border-emerald-300",
+  partial: "bg-amber-50 text-amber-700 border-amber-300",
+  minimal: "bg-red-50 text-red-700 border-red-300",
+};
+
+const RELATION_LABELS: Record<string, string> = {
+  "trabalha-em": "trabalha em",
+  "ponte-nao-explorada": "ponte não explorada",
+  "conexao-rede": "conexão",
+  "mencionado-em-analise": "citado na análise",
+};
+
+interface RankedSynergy {
+  entityId: string;
+  name: string;
+  result: { score: number; sharedTags: string[]; sharedConnectionsCount: number };
+}
+
+interface Analysis {
+  resumo?: string;
+  portaQueAbre?: string;
+  acao?: string;
+  alcance?: string;
+  interesseAtivo?: string;
+  confianca?: string;
+  palavrasChave?: string;
+}
+
+interface Props {
+  entity: Entity;
+  links: GraphLink[];
+  entityById: Map<string, Entity>;
+  workspaceKey: string;
+  readOnly: boolean;
+  /** Visão salva ativa — usado só para mostrar o feedback por objetivo (ver ADR-003) na visão "merlin". */
+  savedView: ViewId;
+  onClose: () => void;
+  onSelectEntity: (id: string) => void;
+  onEntityUpdated: (entity: Entity) => void;
+}
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
+}
+
+export default function EntityDetailPanel({ entity, links, entityById, workspaceKey, readOnly, savedView, onClose, onSelectEntity, onEntityUpdated }: Props) {
+  const [breakdown, setBreakdown] = useState<ScoreBreakdown | null>(entity.scoreBreakdown);
+  const [recommendations, setRecommendations] = useState<RankedSynergy[] | null>(null);
+  const [recError, setRecError] = useState<string | null>(null);
+  const [triageError, setTriageError] = useState<string | null>(null);
+  const [savingTriage, setSavingTriage] = useState(false);
+  const [note, setNote] = useState(entity.triageNote ?? "");
+  const [axisDraft, setAxisDraft] = useState<Record<string, number>>({});
+  const [savingAxis, setSavingAxis] = useState<string | null>(null);
+  const [axisError, setAxisError] = useState<string | null>(null);
+  const [objectiveError, setObjectiveError] = useState<string | null>(null);
+  const [savingObjective, setSavingObjective] = useState(false);
+  const merlinFeedback = (entity.attributes?.objetivos as Record<string, ObjectiveFeedback> | undefined)?.merlin ?? null;
+  const [objectiveNote, setObjectiveNote] = useState(merlinFeedback?.nota ?? "");
+  const [actionItem, setActionItem] = useState<ActionItem | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const key = encodeURIComponent(workspaceKey);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/entities/detail?workspace=${key}&id=${entity.id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { entity?: Entity } | null) => {
+        if (!cancelled && body?.entity) setBreakdown(body.entity.scoreBreakdown);
+      })
+      .catch(() => {});
+    fetch(`/api/recommend?workspace=${key}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entityId: entity.id }),
+    })
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error ?? `falha ao carregar recomendações (${res.status})`);
+        if (!cancelled) setRecommendations((body.ranked as RankedSynergy[]).filter((r) => r.result.score > 0).slice(0, 5));
+      })
+      .catch((err) => {
+        if (!cancelled) setRecError(err instanceof Error ? err.message : "erro desconhecido");
+      });
+    if (entity.type === "person") {
+      fetch(`/api/actions?workspace=${key}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((body: { items?: ActionItem[] } | null) => {
+          if (!cancelled && body?.items) {
+            setActionItem(body.items.find((i) => i.personId === entity.id && i.objective === "merlin") ?? null);
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [entity.id, entity.type, key]);
+
+  async function saveTriage(triage: string | null) {
+    setSavingTriage(true);
+    setTriageError(null);
+    try {
+      const res = await fetch(`/api/entities/triage?workspace=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityId: entity.id, triage, note: note.trim() || null }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? `falha ao salvar (${res.status})`);
+      setBreakdown(body.entity.scoreBreakdown);
+      onEntityUpdated(body.entity);
+    } catch (err) {
+      setTriageError(err instanceof Error ? err.message : "erro desconhecido");
+    } finally {
+      setSavingTriage(false);
+    }
+  }
+
+  async function addToActions() {
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/actions/add?workspace=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityId: entity.id, objective: "merlin" }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? `falha ao adicionar (${res.status})`);
+      setActionItem(body.item);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "erro desconhecido");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function saveAxisOverride(axisId: string, value: number | null) {
+    setSavingAxis(axisId);
+    setAxisError(null);
+    try {
+      const res = await fetch(`/api/entities/axis-override?workspace=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityId: entity.id, axis: axisId, value }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? `falha ao salvar (${res.status})`);
+      setBreakdown(body.entity.scoreBreakdown);
+      onEntityUpdated(body.entity);
+      setAxisDraft((prev) => {
+        const next = { ...prev };
+        delete next[axisId];
+        return next;
+      });
+    } catch (err) {
+      setAxisError(err instanceof Error ? err.message : "erro desconhecido");
+    } finally {
+      setSavingAxis(null);
+    }
+  }
+
+  async function saveObjectiveFeedback(decision: string | null) {
+    setSavingObjective(true);
+    setObjectiveError(null);
+    try {
+      const res = await fetch(`/api/entities/objective-feedback?workspace=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityId: entity.id, objective: "merlin", decision, note: objectiveNote.trim() || null }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? `falha ao salvar (${res.status})`);
+      onEntityUpdated(body.entity);
+    } catch (err) {
+      setObjectiveError(err instanceof Error ? err.message : "erro desconhecido");
+    } finally {
+      setSavingObjective(false);
+    }
+  }
+
+  const quality = computeDataQuality(entity);
+  const analysis = (entity.attributes?.analise ?? null) as Analysis | null;
+
+  const connections = links
+    .filter((l) => l.source === entity.id || l.target === entity.id)
+    .map((l) => ({ other: entityById.get(l.source === entity.id ? l.target : l.source), relation: l.relationType }))
+    .filter((c): c is { other: Entity; relation: string | null } => Boolean(c.other))
+    .sort((a, b) => (b.other.score ?? 0) - (a.other.score ?? 0));
+
+  return (
+    <aside className="flex w-[26rem] shrink-0 flex-col overflow-y-auto border-l border-gray-200 bg-white text-sm">
+      <div className="flex items-start justify-between gap-3 border-b border-gray-200 p-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-gray-900"
+            style={{ backgroundColor: scoreColor(entity.score) }}
+          >
+            {initials(entity.name)}
+          </div>
+          <div className="min-w-0">
+            <div className="text-base font-semibold text-gray-900">{entity.name}</div>
+            <div className="text-xs text-gray-600">{entity.role ?? TYPE_LABELS[entity.type]}</div>
+            {entity.company && entity.type === "person" && <div className="text-xs text-gray-500">{entity.company}</div>}
+          </div>
+        </div>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-800" aria-label="Fechar">
+          ✕
+        </button>
+      </div>
+
+      {entity.linkedinUrl && (
+        <div className="border-b border-gray-200 px-4 py-3">
+          <a
+            href={entity.linkedinUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-md border border-sky-800 px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-100"
+          >
+            Abrir perfil no LinkedIn ↗
+          </a>
+        </div>
+      )}
+
+      {entity.score !== null && (
+        <div className="border-b border-gray-200 p-4">
+          <div className="mb-3 flex items-baseline justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Relevância para a rede</span>
+            <span className="text-2xl font-semibold tabular-nums" style={{ color: scoreColor(entity.score) }}>
+              {entity.score}
+            </span>
+          </div>
+          {breakdown ? (
+            <div className="flex flex-col gap-2.5">
+              {breakdown.axes.map((axis) => {
+                const draft = axisDraft[axis.id];
+                const displayed = draft ?? axis.points;
+                const canAdjust = entity.type === "person" && !readOnly;
+                const commit = (e: { currentTarget: HTMLInputElement }) => saveAxisOverride(axis.id, Number(e.currentTarget.value));
+                return (
+                  <div key={axis.id}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="text-gray-700">{axis.label}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="tabular-nums text-gray-500">
+                          {displayed}/{axis.max}
+                        </span>
+                        {axis.overridden && canAdjust && (
+                          <button
+                            disabled={savingAxis === axis.id}
+                            onClick={() => saveAxisOverride(axis.id, null)}
+                            title="Voltar ao valor calculado automaticamente"
+                            className="text-[10px] font-medium text-sky-600 hover:text-sky-700 disabled:opacity-50"
+                          >
+                            automático
+                          </button>
+                        )}
+                      </span>
+                    </div>
+                    {canAdjust ? (
+                  <div className="flex flex-wrap gap-1">
+                    {Array.from({ length: axis.max / 5 + 1 }, (_, i) => i * 5).map((value) => (
+                      <button
+                        key={value}
+                        disabled={savingAxis === axis.id}
+                        onClick={() => saveAxisOverride(axis.id, value)}
+                        className={`rounded-md border px-2 py-1 text-xs font-medium transition ${
+                          displayed === value
+                            ? "border-sky-400 bg-sky-50 text-sky-700"
+                            : "border-gray-200 text-gray-600 hover:border-gray-300"
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        {value}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                      <div className="h-1.5 overflow-hidden rounded bg-gray-100">
+                        <div className="h-full rounded bg-gray-700" style={{ width: `${(axis.points / axis.max) * 100}%` }} />
+                      </div>
+                    )}
+                    {axis.reasons.length > 0 && <div className="mt-1 text-[11px] leading-snug text-gray-500">{axis.reasons.join(" · ")}</div>}
+                  </div>
+                );
+              })}
+              {breakdown.penalties.map((p) => (
+                <div key={p.label} className="text-[11px] text-red-600">
+                  −{p.points} {p.label}
+                </div>
+              ))}
+              {axisError && <div className="text-[11px] text-red-600">{axisError}</div>}
+            </div>
+          ) : (
+            <div className="text-xs text-gray-500">Carregando explicação…</div>
+          )}
+        </div>
+      )}
+
+      {entity.type === "person" && (
+        <div className="border-b border-gray-200 p-4">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Sua triagem</div>
+          {readOnly ? (
+            <div className="text-xs text-gray-500">Workspace de demonstração — triagem desativada.</div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-1.5">
+                {TRIAGE_OPTIONS.map((option) => {
+                  const active = entity.triage === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      disabled={savingTriage}
+                      onClick={() => saveTriage(active ? null : option.id)}
+                      className={`rounded-full border px-2.5 py-1 text-xs transition disabled:opacity-50 ${
+                        active ? "border-neutral-100 bg-gray-900 text-gray-900" : "border-gray-300 text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                onBlur={() => {
+                  if ((note.trim() || null) !== (entity.triageNote ?? null) && entity.triage) saveTriage(entity.triage);
+                }}
+                placeholder="Nota (como se conhecem, próximo passo…)"
+                rows={2}
+                className="mt-2 w-full resize-none rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs text-gray-800 placeholder-gray-400"
+              />
+              {triageError && <div className="mt-1 text-xs text-red-600">{triageError}</div>}
+            </>
+          )}
+        </div>
+      )}
+
+      {entity.type === "person" && savedView === "merlin" && !readOnly && (
+        <div className="border-b border-gray-200 p-4">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Fit para o objetivo — conversas Merlin
+          </div>
+          <div className="mb-2 text-[11px] leading-snug text-gray-500">
+            Isto é uma hipótese, não a triagem geral da rede — seu feedback aqui calibra só este objetivo (ADR-003).
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {OBJECTIVE_FEEDBACK_OPTIONS.map((option) => {
+              const active = merlinFeedback?.decisao === option.id;
+              return (
+                <button
+                  key={option.id}
+                  disabled={savingObjective}
+                  onClick={() => saveObjectiveFeedback(active ? null : option.id)}
+                  className={`rounded-full border px-2.5 py-1 text-xs transition disabled:opacity-50 ${
+                    active ? "border-neutral-100 bg-gray-900 text-gray-900" : "border-gray-300 text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+          <textarea
+            value={objectiveNote}
+            onChange={(e) => setObjectiveNote(e.target.value)}
+            onBlur={() => {
+              if ((objectiveNote.trim() || null) !== (merlinFeedback?.nota ?? null) && merlinFeedback?.decisao) {
+                saveObjectiveFeedback(merlinFeedback.decisao);
+              }
+            }}
+            placeholder="Por que concorda, discorda ou ajustaria essa indicação?"
+            rows={2}
+            className="mt-2 w-full resize-none rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs text-gray-800 placeholder-gray-400"
+          />
+          {objectiveError && <div className="mt-1 text-xs text-red-600">{objectiveError}</div>}
+        </div>
+      )}
+
+      {entity.type === "person" && !readOnly && (
+        <div className="border-b border-gray-200 p-4">
+          {actionItem ? (
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-gray-600">
+                Nas ações · <span className="text-gray-800">{statusLabel(actionItem.status)}</span>
+              </span>
+              <span className="text-emerald-600">✓ adicionada</span>
+            </div>
+          ) : (
+            <button
+              onClick={addToActions}
+              disabled={actionLoading}
+              className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-800 transition hover:border-gray-400 disabled:opacity-50"
+            >
+              {actionLoading ? "Adicionando…" : "+ Adicionar às ações"}
+            </button>
+          )}
+          {actionError && <div className="mt-1 text-xs text-red-600">{actionError}</div>}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-1.5 border-b border-gray-200 p-4">
+        {entity.themes.map((t) => (
+          <span key={t} className="rounded-full border px-2 py-0.5 text-xs" style={{ borderColor: THEME_COLORS[t], color: THEME_COLORS[t] }}>
+            {THEME_LABELS[t] ?? t}
+          </span>
+        ))}
+        {entity.functions.map((f) => (
+          <span key={f} className="rounded-full border border-gray-300 px-2 py-0.5 text-xs text-gray-700">
+            {FUNCTION_LABELS[f] ?? f}
+          </span>
+        ))}
+        {entity.tags.slice(0, 8).map((tag) => (
+          <span key={tag} className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-gray-500">
+            #{tag}
+          </span>
+        ))}
+        <span className={`rounded-full border px-2 py-0.5 text-xs ${QUALITY_BADGE_CLASS[quality]}`}>{DATA_QUALITY_LABELS[quality]}</span>
+      </div>
+
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-gray-200 p-4 text-xs">
+        <Field label="Poder de decisão" value={entity.seniority ? SENIORITY_LABELS[entity.seniority] : null} />
+        <Field label="Tipo de organização" value={entity.orgType ? ORG_TYPE_LABELS[entity.orgType] : null} />
+        <Field label="Setor" value={entity.sector ? SECTOR_LABELS[entity.sector] ?? entity.sector : null} />
+        <Field label="Localização" value={entity.location ?? entity.country} />
+        <Field label="Conectado em" value={entity.connectedAt ? new Date(entity.connectedAt).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : null} />
+        <Field label="Origem" value={entity.source ? SOURCE_LABELS[entity.source] ?? entity.source : null} />
+        <Field label="Categoria (legado)" value={entity.cluster} />
+        <Field label="Status na rede" value={entity.networkStatus} />
+      </dl>
+
+      {(entity.summary || analysis) && (
+        <div className="flex flex-col gap-3 border-b border-gray-200 p-4 text-xs">
+          {entity.summary && (
+            <div>
+              <div className="mb-1 font-semibold uppercase tracking-wide text-gray-500">Resumo</div>
+              <div className="whitespace-pre-wrap text-gray-700">{entity.summary}</div>
+            </div>
+          )}
+          {analysis && (
+            <div className="rounded-md border border-gray-200 bg-gray-50/60 p-3">
+              <div className="mb-2 font-semibold uppercase tracking-wide text-gray-500">Análise manual</div>
+              <dl className="flex flex-col gap-1.5">
+                {analysis.acao && <Line label="Ação" value={analysis.acao} />}
+                {analysis.portaQueAbre && <Line label="Porta que abre" value={analysis.portaQueAbre} />}
+                {analysis.alcance && <Line label="Alcance" value={analysis.alcance} />}
+                {analysis.palavrasChave && <Line label="Palavras-chave" value={analysis.palavrasChave} />}
+                {analysis.interesseAtivo && <Line label="Interesse ativo" value={analysis.interesseAtivo} />}
+                {analysis.confianca && <Line label="Confiança" value={analysis.confianca} />}
+              </dl>
+            </div>
+          )}
+        </div>
+      )}
+
+      {connections.length > 0 && (
+        <div className="border-b border-gray-200 p-4">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Conexões ({connections.length})</div>
+          <div className="flex max-h-72 flex-col gap-0.5 overflow-y-auto">
+            {connections.slice(0, 100).map(({ other, relation }) => (
+              <button
+                key={other.id}
+                onClick={() => onSelectEntity(other.id)}
+                className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-left transition hover:bg-gray-50"
+              >
+                <span className="truncate text-gray-700">{other.name}</span>
+                <span className="shrink-0 text-[10px] text-gray-500">{relation ? RELATION_LABELS[relation] ?? relation : ""}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="p-4">
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Afinidades na rede</div>
+        {recError && <div className="text-xs text-red-600">{recError}</div>}
+        {!recError && !recommendations && <div className="text-xs text-gray-500">Calculando…</div>}
+        {recommendations && recommendations.length === 0 && <div className="text-xs text-gray-500">Nenhuma afinidade encontrada ainda.</div>}
+        {recommendations && recommendations.length > 0 && (
+          <div className="flex flex-col gap-1">
+            {recommendations.map((r) => (
+              <button
+                key={r.entityId}
+                onClick={() => onSelectEntity(r.entityId)}
+                className="flex items-center justify-between rounded px-2 py-1.5 text-left transition hover:bg-gray-50"
+              >
+                <span className="truncate text-gray-700">{r.name}</span>
+                <span className="text-xs text-gray-500">{Math.round(r.result.score * 100)}%</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null;
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{label}</dt>
+      <dd className="text-gray-800">{value}</dd>
+    </div>
+  );
+}
+
+function Line({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="inline text-gray-500">{label}: </dt>
+      <dd className="inline text-gray-700">{value}</dd>
+    </div>
+  );
+}
