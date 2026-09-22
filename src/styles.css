@@ -23,9 +23,12 @@
   --sky: oklch(58% 0.13 240);
 }
 
+@theme {
+  --font-display: "Newsreader", Georgia, serif;
+}
+
 @theme inline {
   --font-sans: "Manrope", system-ui, sans-serif;
-  --font-display: Fraunces, Georgia, serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
