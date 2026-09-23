@@ -67,7 +67,7 @@
             </div>
 
             <fieldset class="grid gap-2" id="oferta-group">
-              <legend class="mb-2 text-sm font-semibold">O que você vende? <span class="text-teal" aria-hidden="true">*</span> <span class="font-normal text-muted-foreground">Pode marcar mais de uma opção.</span></legend>
+              <legend class="mb-2 text-sm font-semibold">O que você quer vender? <span class="text-teal" aria-hidden="true">*</span> <span class="font-normal text-muted-foreground">Pode marcar mais de uma opção.</span></legend>
               <input type="hidden" name="oferta" id="oferta">
               <div class="flex flex-wrap gap-2">
                 <label class="cursor-pointer">
@@ -99,9 +99,9 @@
                   <span class="inline-flex min-h-10 items-center rounded-full border border-line bg-surface/80 px-4 text-sm font-medium transition hover:border-teal/60 peer-checked:border-teal peer-checked:bg-teal/10 peer-checked:text-teal peer-focus-visible:ring-3 peer-focus-visible:ring-ring/25">Outro</span>
                 </label>
               </div>
-              <input id="oferta_outro" name="oferta_outro" type="text" autocomplete="off" placeholder="Conte o que você vende" class="hidden min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition placeholder:text-muted-foreground/60 focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
+              <input id="oferta_outro" name="oferta_outro" type="text" autocomplete="off" placeholder="Conte o que você quer vender" class="hidden min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition placeholder:text-muted-foreground/60 focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
               <p class="hidden text-sm text-destructive" data-error-for="oferta">Selecione pelo menos uma opção.</p>
-              <p class="hidden text-sm text-destructive" data-error-for="oferta_outro">Conte o que você vende no campo “Outro”.</p>
+              <p class="hidden text-sm text-destructive" data-error-for="oferta_outro">Conte o que você quer vender no campo “Outro”.</p>
             </fieldset>
 
             <div class="grid gap-2">
@@ -120,15 +120,16 @@
             </div>
 
             <div class="grid gap-2">
-              <label for="tamanho_rede" class="text-sm font-semibold">Tamanho aproximado da sua rede <span class="font-normal text-muted-foreground">(opcional)</span></label>
-              <select id="tamanho_rede" name="tamanho_rede" class="min-h-11 w-full appearance-none rounded-md border border-line bg-surface/80 bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22/%3E%3C/svg%3E')] bg-[position:right_0.875rem_center] bg-no-repeat px-3.5 pr-10 text-base outline-hidden transition focus:border-teal focus:ring-3 focus:ring-ring/25">
-                <option value="" selected>Selecione (opcional)</option>
+              <label for="tamanho_rede" class="text-sm font-semibold">Tamanho aproximado da sua rede <span class="text-teal" aria-hidden="true">*</span></label>
+              <select id="tamanho_rede" name="tamanho_rede" required class="min-h-11 w-full appearance-none rounded-md border border-line bg-surface/80 bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22/%3E%3C/svg%3E')] bg-[position:right_0.875rem_center] bg-no-repeat px-3.5 pr-10 text-base outline-hidden transition focus:border-teal focus:ring-3 focus:ring-ring/25">
+                <option value="" disabled selected>Selecione uma opção</option>
                 <option>Até 500</option>
                 <option>500 - 3.000</option>
                 <option>3.000 - 5.000</option>
                 <option>5.000 - 10.000</option>
                 <option>Mais de 10.000</option>
               </select>
+              <p class="hidden text-sm text-destructive" data-error-for="tamanho_rede">Selecione o tamanho aproximado da sua rede.</p>
             </div>
 
             <div class="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -177,7 +178,7 @@
     return ok;
   }
 
-  var fields = ['nome', 'email', 'telefone', 'linkedin', 'objetivo'].map(function (n) { return form.elements[n]; });
+  var fields = ['nome', 'email', 'telefone', 'linkedin', 'objetivo', 'tamanho_rede'].map(function (n) { return form.elements[n]; });
   fields.forEach(function (f) {
     f.addEventListener('blur', function () { if (f.value) check(f); });
     f.addEventListener('change', function () { if (f.getAttribute('aria-invalid') === 'true') check(f); });
