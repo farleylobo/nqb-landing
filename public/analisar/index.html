@@ -66,6 +66,44 @@
               </div>
             </div>
 
+            <fieldset class="grid gap-2" id="oferta-group">
+              <legend class="mb-2 text-sm font-semibold">O que você vende? <span class="text-teal" aria-hidden="true">*</span> <span class="font-normal text-muted-foreground">Pode marcar mais de uma opção.</span></legend>
+              <input type="hidden" name="oferta" id="oferta">
+              <div class="flex flex-wrap gap-2">
+                <label class="cursor-pointer">
+                  <input type="checkbox" value="Palestras" class="peer sr-only" data-oferta>
+                  <span class="inline-flex min-h-10 items-center rounded-full border border-line bg-surface/80 px-4 text-sm font-medium transition hover:border-teal/60 peer-checked:border-teal peer-checked:bg-teal/10 peer-checked:text-teal peer-focus-visible:ring-3 peer-focus-visible:ring-ring/25">Palestras</span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="checkbox" value="Imersões" class="peer sr-only" data-oferta>
+                  <span class="inline-flex min-h-10 items-center rounded-full border border-line bg-surface/80 px-4 text-sm font-medium transition hover:border-teal/60 peer-checked:border-teal peer-checked:bg-teal/10 peer-checked:text-teal peer-focus-visible:ring-3 peer-focus-visible:ring-ring/25">Imersões</span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="checkbox" value="Mentorias & Coaching" class="peer sr-only" data-oferta>
+                  <span class="inline-flex min-h-10 items-center rounded-full border border-line bg-surface/80 px-4 text-sm font-medium transition hover:border-teal/60 peer-checked:border-teal peer-checked:bg-teal/10 peer-checked:text-teal peer-focus-visible:ring-3 peer-focus-visible:ring-ring/25">Mentorias &amp; Coaching</span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="checkbox" value="Workshops" class="peer sr-only" data-oferta>
+                  <span class="inline-flex min-h-10 items-center rounded-full border border-line bg-surface/80 px-4 text-sm font-medium transition hover:border-teal/60 peer-checked:border-teal peer-checked:bg-teal/10 peer-checked:text-teal peer-focus-visible:ring-3 peer-focus-visible:ring-ring/25">Workshops</span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="checkbox" value="Consultoria" class="peer sr-only" data-oferta>
+                  <span class="inline-flex min-h-10 items-center rounded-full border border-line bg-surface/80 px-4 text-sm font-medium transition hover:border-teal/60 peer-checked:border-teal peer-checked:bg-teal/10 peer-checked:text-teal peer-focus-visible:ring-3 peer-focus-visible:ring-ring/25">Consultoria</span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="checkbox" value="Cursos" class="peer sr-only" data-oferta>
+                  <span class="inline-flex min-h-10 items-center rounded-full border border-line bg-surface/80 px-4 text-sm font-medium transition hover:border-teal/60 peer-checked:border-teal peer-checked:bg-teal/10 peer-checked:text-teal peer-focus-visible:ring-3 peer-focus-visible:ring-ring/25">Cursos</span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="checkbox" value="Outro" class="peer sr-only" data-oferta>
+                  <span class="inline-flex min-h-10 items-center rounded-full border border-line bg-surface/80 px-4 text-sm font-medium transition hover:border-teal/60 peer-checked:border-teal peer-checked:bg-teal/10 peer-checked:text-teal peer-focus-visible:ring-3 peer-focus-visible:ring-ring/25">Outro</span>
+                </label>
+              </div>
+              <input id="oferta_outro" name="oferta_outro" type="text" autocomplete="off" placeholder="Conte o que você vende" class="hidden min-h-11 w-full rounded-md border border-line bg-surface/80 px-3.5 text-base outline-hidden transition placeholder:text-muted-foreground/60 focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
+              <p class="hidden text-sm text-destructive" data-error-for="oferta">Selecione pelo menos uma opção.</p>
+              <p class="hidden text-sm text-destructive" data-error-for="oferta_outro">Conte o que você vende no campo “Outro”.</p>
+            </fieldset>
+
             <div class="grid gap-2">
               <label for="objetivo" class="text-sm font-semibold">Qual é seu objetivo? <span class="text-teal" aria-hidden="true">*</span></label>
               <select id="objetivo" name="objetivo" required class="min-h-11 w-full appearance-none rounded-md border border-line bg-surface/80 bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22/%3E%3C/svg%3E')] bg-[position:right_0.875rem_center] bg-no-repeat px-3.5 pr-10 text-base outline-hidden transition focus:border-teal focus:ring-3 focus:ring-ring/25 aria-[invalid=true]:border-destructive">
@@ -145,11 +183,40 @@
     f.addEventListener('change', function () { if (f.getAttribute('aria-invalid') === 'true') check(f); });
   });
 
+  var ofertaBoxes = [].slice.call(form.querySelectorAll('[data-oferta]'));
+  var ofertaHidden = document.getElementById('oferta');
+  var ofertaOutro = document.getElementById('oferta_outro');
+  var outroBox = ofertaBoxes.filter(function (c) { return c.value === 'Outro'; })[0];
+  function syncOferta() {
+    var vals = ofertaBoxes.filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
+    ofertaHidden.value = vals.join(', ');
+    ofertaOutro.classList.toggle('hidden', !outroBox.checked);
+    if (!outroBox.checked) ofertaOutro.value = '';
+  }
+  function checkOferta() {
+    syncOferta();
+    var any = ofertaHidden.value.length > 0;
+    form.querySelector('[data-error-for="oferta"]').classList.toggle('hidden', any);
+    var outroOk = !outroBox.checked || ofertaOutro.value.trim().length > 1;
+    ofertaOutro.setAttribute('aria-invalid', outroOk ? 'false' : 'true');
+    form.querySelector('[data-error-for="oferta_outro"]').classList.toggle('hidden', outroOk);
+    return any && outroOk;
+  }
+  ofertaOutro.addEventListener('input', function () { if (ofertaOutro.getAttribute('aria-invalid') === 'true') checkOferta(); });
+  ofertaBoxes.forEach(function (c) {
+    c.addEventListener('change', function () {
+      syncOferta();
+      if (c === outroBox && c.checked) ofertaOutro.focus();
+      if (!form.querySelector('[data-error-for="oferta"]').classList.contains('hidden')) checkOferta();
+    });
+  });
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     status.classList.add('hidden');
     var firstBad = null;
     fields.forEach(function (f) { if (!check(f) && !firstBad) firstBad = f; });
+    if (!checkOferta() && !firstBad) firstBad = outroBox.checked && ofertaHidden.value ? ofertaOutro : ofertaBoxes[0];
     if (firstBad) { firstBad.focus(); return; }
 
     button.disabled = true;

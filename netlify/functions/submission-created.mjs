@@ -25,6 +25,7 @@ export const handler = async (event) => {
     telefone: d.telefone || '',
     linkedin: d.linkedin || '',
     site: d.site || '',
+    oferta: [d.oferta, d.oferta_outro].filter(Boolean).join(': '),
     objetivo: d.objetivo || '',
     tamanho_rede: d.tamanho_rede || '',
     id_netlify: payload.id || '',

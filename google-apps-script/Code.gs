@@ -4,7 +4,7 @@
  */
 const SECRET = 'TROQUE-ESTE-SEGREDO'; // use o mesmo valor em SHEETS_SECRET no Netlify
 const SHEET_NAME = 'Respostas';
-const HEADERS = ['Data do envio', 'Nome', 'E-mail', 'Telefone', 'LinkedIn', 'Site ou portfólio', 'Objetivo', 'Tamanho da rede', 'ID Netlify'];
+const HEADERS = ['Data do envio', 'Nome', 'E-mail', 'Telefone', 'LinkedIn', 'Site ou portfólio', 'O que vende', 'Objetivo', 'Tamanho da rede', 'ID Netlify'];
 
 function doPost(e) {
   const body = JSON.parse(e.postData.contents || '{}');
@@ -19,7 +19,7 @@ function doPost(e) {
   }
   sheet.appendRow([
     new Date(body.data_envio || Date.now()),
-    body.nome, body.email, body.telefone, body.linkedin, body.site,
+    body.nome, body.email, body.telefone, body.linkedin, body.site, body.oferta,
     body.objetivo, body.tamanho_rede, body.id_netlify,
   ]);
   return ContentService.createTextOutput('ok');
